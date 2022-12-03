@@ -1,4 +1,4 @@
-#include <opencv2/core.hpp>
+﻿#include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -6,86 +6,178 @@
 #include <string>
 #include <filesystem>
 #include <vector>
+#include <sstream>
+#include <regex>
+#include <algorithm>
+#include <chrono>
+#include <forward_list>
+#include "windows.h"
+#include "psapi.h"
+#include "Classes.cpp"
 using namespace cv;
-
-
-class command {
-public:
-    virtual void execute(Mat&) = 0;
-    virtual ~command() = default;
-private:
-    std::string info;
-
-
-};
-
-class blackwhite: public command {
-
-public:
-    void execute(Mat& img) {
-
-
-
-        cvtColor(img,img,COLOR_BGR2GRAY);
-
-
-    }
-
-    virtual ~blackwhite() = default;
-
-private:
-    std::string info;
-
-};
-
-    std::vector<Mat> images;
-    
-
-
-
-
-
-
-
+std::string word;
 std::string userinput;
+std::stringstream line;
+std::vector<std::string> filenames;
+std::vector<std::string> commandnames;
+
+
+
+
+
+void getallfiles(std::string path) {
+
+    
+       
+        for (const auto& entry : std::filesystem::directory_iterator(path)) {
+            
+            std::string filename = entry.path().string();
+            int length=path.length();
+            filename.erase(0, length+1);
+            if (std::regex_match(filename, std::regex("(.*)(.jpg)|(.png)|(.jpeg)|(.bmp)|(.dib)|(.jpe)|(.jp2)|(.webp)|(.pbm)|(.pgm)|(.ppm)|(.pxm)|(.pnm)|(.sr)|(.ras)|(.tif)|(.tiff)|(.exr)|(.hdr)|(.pic)"))) {
+                filenames.push_back(filename);
+            }
+        }
+}
+
+
+
+double getparameter(std::string &par) {
+
+    std::smatch argument;
+    std::regex_search(par, argument, std::regex("\\(.*\\)"));
+    std::string word = argument[0];
+    word.erase(word.begin());
+    word.erase(word.end() - 1);
+    std::cout << word;
+    
+    return std::stod(word);
+}
+
+
+
+
 
 int main()
+
 {
+
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc));
+    SIZE_T virtualMemUsedByMe = pmc.PrivateUsage;
     std::string path = std::filesystem::current_path().string();
-    
+    std::cout << path<< "  ";
 
-    cv::Mat img = cv::imread("C:/Users/jedre/OneDrive - Politechnika Wroclawska/Pulpit/temps.png");
-    namedWindow("First OpenCV Application", WINDOW_AUTOSIZE);
-    cv::imshow("First OpenCV Application", img);
-    cv::moveWindow("First OpenCV Application", 0, 45);
-    
-    cv::destroyAllWindows();
-    imwrite("test.jpg", img);
+ 
+   
 
+    std::getline(std::cin, userinput);
+    std::stringstream linia(userinput);
+    auto t1 = std::chrono::high_resolution_clock::now();
+    while (std::getline(linia, word, ' ')) {
 
+        std::cout << word;
+        if (std::regex_match(word, std::regex("(.*)(.jpg)|(.png)|(.jpeg)|(.bmp)|(.dib)|(.jpe)|(.jp2)|(.webp)|(.pbm)|(.pgm)|(.ppm)|(.pxm)|(.pnm)|(.sr)|(.ras)|(.tif)|(.tiff)|(.exr)|(.hdr)|(.pic)"))) {
+            std::cout << "\nplik";
+            filenames.push_back(word);
+        }
+        else if (word == "all") {
+            getallfiles(path);
 
+        }
+        else {
 
-
-
-
-
-
-
-
-    command* comm = new blackwhite();
-    comm->execute(img);
-    cv::imshow("First OpenCV Application", img);
-    delete comm;
-
-    cv::waitKey(0);
-    while (1) {
-
-
-        std::cin >> userinput;
-
-        
+        commandnames.push_back(word);
+        }
 
     }
+    std::vector<command*> commandsready;
+    for (auto i : commandnames) {
+
+        if (i == "blackwhite") {
+
+            command* comm = new blackwhite();
+            commandsready.push_back(comm);
+          
+        }
+
+
+        if (i == "boxfilterblur") {
+
+            command* comm = new boxfilterblur();
+            commandsready.push_back(comm);
+         
+        }
+
+        if (i == "gaussianblur") {
+
+            command* comm = new gaussianblur();
+            commandsready.push_back(comm);
+           
+        }
+
+        
+        if (std::regex_match(i, std::regex("(scale)(\\()(.*)(\\))"))) {
+            double argument = getparameter(i);
+            command* comm = new scale(argument);
+            commandsready.push_back(comm);
+            
+        }
+        else {
+            std::cout << i << "is not recognized as command or filename";
+
+
+        }
+
+
+
+
+
+    }
+    std::string tempfilepath;
+    std::replace(path.begin(), path.end(), '\\', '/');
+    std::forward_list<Mat> images;
+  
+    for (auto i : filenames) {
+        
+        tempfilepath = path + '/' + i;
+ 
+        images.push_front(cv::imread(tempfilepath));
+   
+
+    }
+
+   size_t physMemUsedByMe = pmc.WorkingSetSize;
+   std::cout <<"\npamiec: " << physMemUsedByMe<<'\n';
+    for (std::vector<command*>::iterator it = commandsready.begin(); it != commandsready.end(); ++it) {
+       
+        
+        for (auto &i : images) {
+            (*it)->execute(i);
+           
+        }
+        delete* it;
+       
+    }
+
+    int j = 0;
+    for (auto i : filenames) {
+        
+        tempfilepath = path + '/' + "(2)" + i;
+        /*imwrite(tempfilepath, images[j]);*/
+        j++;
+
+
+    }
+    
+    commandsready.clear();
+
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+   std::cout<<"czas: "<< ms_double.count();
+    cv::waitKey(0);
+
+  
 
     
 
