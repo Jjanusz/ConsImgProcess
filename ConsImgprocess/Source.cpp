@@ -102,14 +102,14 @@ int main()
         }
 
 
-        if (i == "boxfilterblur") {
+        else if(i == "boxfilterblur") {
 
             command* comm = new boxfilterblur();
             commandsready.push_back(comm);
          
         }
 
-        if (i == "gaussianblur") {
+        else if (i == "gaussianblur") {
 
             command* comm = new gaussianblur();
             commandsready.push_back(comm);
@@ -117,7 +117,7 @@ int main()
         }
 
         
-        if (std::regex_match(i, std::regex("(scale)(\\()(.*)(\\))"))) {
+        else if (std::regex_match(i, std::regex("(scale)(\\()(.*)(\\))"))) {
             double argument = getparameter(i);
             command* comm = new scale(argument);
             commandsready.push_back(comm);
@@ -134,46 +134,60 @@ int main()
 
 
     }
+
+   
     std::string tempfilepath;
     std::replace(path.begin(), path.end(), '\\', '/');
-    std::forward_list<Mat> images;
-  
-    for (auto i : filenames) {
+    std::string currentfile;
+    std::vector<std::string>::iterator nameit = filenames.begin();
+    std::vector<std::string>::iterator nameit2 = filenames.begin();
+    while (currentfile != filenames.back()) {
+        std::vector<Mat> images;
+        int size = 0;
+        images.reserve(100);
         
-        tempfilepath = path + '/' + i;
- 
-        images.push_front(cv::imread(tempfilepath));
-   
-
-    }
-
-   size_t physMemUsedByMe = pmc.WorkingSetSize;
-   std::cout <<"\npamiec: " << physMemUsedByMe<<'\n';
-    for (std::vector<command*>::iterator it = commandsready.begin(); it != commandsready.end(); ++it) {
-       
-        
-        for (auto &i : images) {
-            (*it)->execute(i);
+        for (nameit;  nameit != filenames.end(); nameit++) {
+            if (size > 100000000) {
+                break;
+            }
+            tempfilepath = path + '/' + *nameit;
+            currentfile=*nameit;
+            images.push_back(cv::imread(tempfilepath));
+            size = images.front().size().area() + size;
+            
            
         }
-        delete* it;
+
+        size_t physMemUsedByMe = pmc.WorkingSetSize;
+     
+        for (std::vector<command*>::iterator it = commandsready.begin(); it != commandsready.end(); ++it) {
+
+
+            for (auto& i : images) {
+                (*it)->execute(i);
+
+            }
+            
+
+        }
        
+        for (auto i : images) {
+           
+            tempfilepath = path + '/' + "(2)" + *nameit2;
+            /*imwrite(tempfilepath, images(i));*/
+            std::cout << *nameit2<< '\n';
+            nameit2++;
+            
+
+        }
     }
-
-    int j = 0;
-    for (auto i : filenames) {
-        
-        tempfilepath = path + '/' + "(2)" + i;
-        /*imwrite(tempfilepath, images[j]);*/
-        j++;
-
-
+   
+    for (std::vector<command*>::iterator it = commandsready.begin(); it != commandsready.end(); ++it) {
+        delete* it;
     }
-    
-    commandsready.clear();
-
+     commandsready.clear();
     auto t2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    std::chrono::duration<double, std::ratio<60>> ms_double = t2 - t1;
    std::cout<<"czas: "<< ms_double.count();
     cv::waitKey(0);
 
