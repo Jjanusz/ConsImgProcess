@@ -1,4 +1,4 @@
-
+#pragma once
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -11,157 +11,111 @@
 #include <sstream>
 
 
-class Command {
+class Command 
+{
 public:
-    virtual void execute(cv::Mat&) = 0;
-    virtual ~Command();
+	virtual void execute(cv::Mat&) = 0;
+	virtual ~Command();
+
 private:
-    std::string info;
-
-
+	std::string info;
 };
 
-class BlackWhite : public Command {
-
+class BlackWhite : public Command 
+{
 public:
-    void execute(cv::Mat& img);
-
-     ~BlackWhite();
+	void execute(cv::Mat& img);
+	~BlackWhite();
 
 private:
-    std::string info;
-
+	std::string info;
 };
 
-
-class GausianBlur : public Command {
-
+class GausianBlur : public Command
+{
 public:
-    void execute(cv::Mat& img);
-
-     ~GausianBlur();
+	void execute(cv::Mat& img);
+	~GausianBlur();
 
 private:
-    std::string info;
-
+	std::string info;
 };
 
-class BoxFilterBlur : public Command {
-
+class BoxFilterBlur : public Command 
+{
 public:
-    void execute(cv::Mat& img);
-    
-
-     ~BoxFilterBlur();
+	void execute(cv::Mat& img);
+	~BoxFilterBlur();
 
 private:
-    std::string info;
-
+	std::string info;
 };
 
-
-class Scale : public Command {
-
+class Scale : public Command 
+{
 public:
-    Scale(double x);
-        
-
-    Scale();
-       
-
-    
-
-
-    void execute(cv::Mat& img);
-
-     ~Scale();
+	Scale(double x);
+	Scale();
+	void execute(cv::Mat& img);
+	~Scale();
 
 private:
-    double parameter;
-    std::string info;
+	double parameter;
+	std::string info;
 };
 
-
-
-
-
-
-class Resize : public Command {
-
+class Resize : public Command 
+{
 public:
-    Resize(std::string parameter);
-
-
-        Resize();
-        void execute(cv::Mat& img);
-     ~Resize();
+	Resize(std::string parameter);
+	Resize();
+	void execute(cv::Mat& img);
+	~Resize();
 
 private:
-    cv::Size size;
-    std::string parameter;
-    std::string info;
+	cv::Size size;
+	std::string parameter;
+	std::string info;
 };
 
-class Negative : public Command {
-
+class Negative : public Command 
+{
 public:
-
-
-
-    void execute(cv::Mat& img);
-     ~Negative();
+	void execute(cv::Mat& img);
+	~Negative();
 
 private:
-
-    std::string info;
+	std::string info;
 };
 
-class DarkToLight : public Command {
-
+class DarkToLight : public Command 
+{
 public:
-
-
-
-    void execute(cv::Mat& img);
-     ~DarkToLight();
+	void execute(cv::Mat& img);
+	~DarkToLight();
 
 private:
-
-    std::string info;
+	std::string info;
 };
 
-
-
-class Cartoon : public Command {
-
+class Cartoon : public Command 
+{
 public:
-
-
-
-    void execute(cv::Mat& img);
-
-
-     ~Cartoon();
+	void execute(cv::Mat& img);
+	~Cartoon();
 
 private:
-
-    std::string info;
+	std::string info;
 };
 
-
-
-class Autom : public Command {
-
+class Autom : public Command 
+{
 public:
-
-
-    void execute(cv::Mat& img);
-
-     ~Autom();
+	void execute(cv::Mat& img);
+	~Autom();
 
 private:
-
-    std::string info;
+	std::string info;
 };
 
 

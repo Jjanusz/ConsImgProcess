@@ -5,11 +5,11 @@
 #include <filesystem>
 #include <regex>
 
+
+extern std::string formats;
 void getAllFiles(std::string path, std::vector<std::string>& filenames);
-
-double getParameter(std::string& par);
-
-std::string getParameterString(std::string& par);
+double getFactorParameter(std::string& par);
+std::string getParameter(std::string& par);
 
 
 
