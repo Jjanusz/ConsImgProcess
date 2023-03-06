@@ -176,7 +176,7 @@ int main()
 
 				}
 
-				for (std::vector<std::unique_ptr<Command>> ::iterator it = commandsready.begin(); it != commandsready.end(); ++it)
+				for (std::vector<std::unique_ptr<Command>> ::iterator it = commandsready.begin(); it != commandsready.end(); it++)
 				{
 					for (auto& i : images) 
 					{
