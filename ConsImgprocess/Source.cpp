@@ -26,97 +26,100 @@ int main()
 	std::string conftab2[6];
 	int i = 0;
 	config.open("config.ini", std::ios::in);
-	
-	while (config.peek() != EOF) 
+
+	while (config.peek() != EOF)
 	{
 		std::getline(config, conftab[i], '=');
 		std::getline(config, conftab2[i]);
 		i++;
 	}
-	
+
 	int MAXSIZE = 1000000000 * stoi(conftab2[0]);
 	std::string ifloop = conftab2[1];
 	std::string path = std::filesystem::current_path().string();
 
-	while (true) 
+	while (true)
 	{
 
-		std::cout << '\n' << path << "  ";
+		std::cout << '\n'
+				  << path << "  ";
 		std::string userinput;
 		std::getline(std::cin, userinput);
 		std::stringstream linia(userinput);
 		std::vector<std::string> filenames;
 		std::vector<std::string> commandnames;
 		std::string word;
-		
-		while (std::getline(linia, word, ' ')) 
+
+		while (std::getline(linia, word, ' '))
 		{
 
-			if (std::regex_match(word, std::regex(formats))) {
+			if (std::regex_match(word, std::regex(formats)))
+			{
 				filenames.push_back(word);
 			}
 
-			else if (word == "all") 
+			else if (word == "all")
 			{
 				getAllFiles(path, filenames);
 			}
 
-			else 
+			else
 			{
 				commandnames.push_back(word);
 				std::cout << word << '\n';
 			}
 		}
-		
-		std::vector<std::unique_ptr<Command>> commandsready;
-		
-		for (auto& i : commandnames) {
 
-			if (i == "blackwhite") 
+		std::vector<std::unique_ptr<Command>> commandsready;
+
+		for (auto &i : commandnames)
+		{
+
+			if (i == "blackwhite")
 			{
 				std::unique_ptr<Command> comm(new BlackWhite);
 				commandsready.push_back(std::move(comm));
 			}
 
-			else if (i == "boxfilterblur") 
+			else if (i == "boxfilterblur")
 			{
 				std::unique_ptr<Command> comm(new BoxFilterBlur);
 				commandsready.push_back(std::move(comm));
 			}
 
-			else if (i == "gaussianblur") 
+			else if (i == "gaussianblur")
 			{
 				std::unique_ptr<Command> comm(new GausianBlur);
 				commandsready.push_back(std::move(comm));
 			}
 
-			else if (i == "negative") 
+			else if (i == "negative")
 			{
 				std::unique_ptr<Command> comm(new Negative);
 				commandsready.push_back(std::move(comm));
 			}
 
-			else if (i == "dty") 
+			else if (i == "dty")
 			{
 				std::unique_ptr<Command> comm(new DarkToLight);
 				commandsready.push_back(std::move(comm));
 			}
 
-			else if (std::regex_match(i, std::regex("(scale)(\\()(.*)(\\))"))) 
+			else if (std::regex_match(i, std::regex("(scale)(\\()(.*)(\\))")))
 			{
 				double argument = getFactorParameter(i);
 				std::unique_ptr<Command> comm(new Scale(argument));
 				commandsready.push_back(std::move(comm));
 			}
 
-			else if (std::regex_match(i, std::regex("(resize)(\\()(.*)(\\))"))) 
+			else if (std::regex_match(i, std::regex("(resize)(\\()(.*)(\\))")))
 			{
 				std::string argument = getParameter(i);
 				std::unique_ptr<Command> comm(new Resize(argument));
 				commandsready.push_back(std::move(comm));
 			}
 
-			else if (i == "cartoon") 
+			else if (i == "cartoon")
 			{
 				std::unique_ptr<Command> comm(new Cartoon);
 				commandsready.push_back(std::move(comm));
@@ -128,15 +131,13 @@ int main()
 				commandsready.push_back(std::move(comm));
 			}
 
-			else 
+			else
 			{
 				std::cout << i << "is not recognized as Command or filename";
-
-
 			}
 		}
-		
-		if (filenames.empty()) 
+
+		if (filenames.empty())
 		{
 
 			std::cout << "Brak prawidłowo wybranych zdjęć";
@@ -147,7 +148,7 @@ int main()
 			std::cout << "Brak prawidłowo wybranych komend";
 		}
 
-		else 
+		else
 		{
 			std::string tempfilepath;
 			std::replace(path.begin(), path.end(), '\\', '/');
@@ -156,7 +157,7 @@ int main()
 			std::vector<std::string>::iterator nameit = filenames.begin();
 			std::vector<std::string>::iterator nameit2 = filenames.begin();
 			auto t1 = std::chrono::high_resolution_clock::now();
-			
+
 			while (currentfile != filenames.back())
 			{
 				std::vector<Mat> images;
@@ -164,7 +165,7 @@ int main()
 				int size = 0;
 				for (nameit; nameit != filenames.end(); nameit++)
 				{
-					if (size > MAXSIZE) 
+					if (size > MAXSIZE)
 					{
 						break;
 					}
@@ -172,20 +173,17 @@ int main()
 					currentfile = *nameit;
 					images.push_back(cv::imread(tempfilepath));
 					size = images.front().size().area() + size;
-
-
 				}
 
-				for (std::vector<std::unique_ptr<Command>> ::iterator it = commandsready.begin(); it != commandsready.end(); it++)
+				for (std::vector<std::unique_ptr<Command>>::iterator it = commandsready.begin(); it != commandsready.end(); it++)
 				{
-					for (auto& i : images) 
+					for (auto &i : images)
 					{
 						(*it)->execute(i);
-
 					}
 				}
 
-				for (auto& i : images) 
+				for (auto &i : images)
 				{
 					tempfilepath = path + '/' + "(1)" + *nameit2;
 					imwrite(tempfilepath, i);
@@ -196,8 +194,8 @@ int main()
 			auto t2 = std::chrono::high_resolution_clock::now();
 			std::chrono::duration<double, std::ratio<60>> ms_double = t2 - t1;
 			std::cout << "czas: " << ms_double.count();
-			
-			if (ifloop == "FALSE") 
+
+			if (ifloop == "FALSE")
 			{
 				exit(0);
 			}
